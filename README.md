@@ -1,12 +1,13 @@
 # PDF to JSON Converter
 
-A web application that converts PDF files to JSON format and analyzes their content to generate appropriate SQL table structures.
+A web application that converts PDF files to JSON format and analyzes their content to generate appropriate SQL table structures. The application can handle various document types including exam schedules, invoices, receipts, and more.
 
 ## Features
 
 - PDF to JSON conversion
-- Document type detection (invoice, receipt, report, contract, form)
+- Document type detection (exam schedule, invoice, receipt, report, contract, form)
 - Automatic SQL table structure generation
+- Exam schedule parsing and display
 - Confidence scoring for document type detection
 - Modern UI with drag-and-drop file upload
 - Real-time analysis and preview
@@ -64,6 +65,7 @@ The application will be available at:
 4. View the results:
    - Document type and confidence score
    - SQL table structure
+   - Parsed data (e.g., exam schedule)
    - Extracted text and metadata
 5. Download the JSON file if needed
 

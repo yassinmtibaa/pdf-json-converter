@@ -88,7 +88,7 @@ function App() {
     if (!metadata) return null;
     return Object.entries(metadata).map(([key, value]) => ({
       key: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-      value: value
+      value: typeof value === 'object' ? JSON.stringify(value) : String(value)
     }));
   };
 
@@ -117,6 +117,41 @@ function App() {
                 </HStack>
 
                 <Accordion allowMultiple>
+                  {convertedData.analysis.documentType === 'exam_schedule' && convertedData.analysis.examData && (
+                    <AccordionItem>
+                      <h2>
+                        <AccordionButton>
+                          <Box flex="1" textAlign="left">
+                            <Text fontWeight="medium">Exam Schedule</Text>
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <Table variant="simple" size="sm">
+                          <Thead>
+                            <Tr>
+                              <Th>Code</Th>
+                              <Th>Course</Th>
+                              <Th>Date</Th>
+                              <Th>Time</Th>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {convertedData.analysis.examData.map((exam, index) => (
+                              <Tr key={index}>
+                                <Td>{exam.code}</Td>
+                                <Td>{exam.title}</Td>
+                                <Td>{exam.date}</Td>
+                                <Td>{exam.time}</Td>
+                              </Tr>
+                            ))}
+                          </Tbody>
+                        </Table>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  )}
+
                   <AccordionItem>
                     <h2>
                       <AccordionButton>

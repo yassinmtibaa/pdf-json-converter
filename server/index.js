@@ -15,6 +15,7 @@ app.use(express.json());
 // Function to detect document type based on keywords
 function detectDocumentType(text) {
   const keywords = {
+    exam_schedule: ['exam', 'schedule', 'final', 'exams', 'course', 'code', 'time', 'date'],
     invoice: ['invoice', 'bill', 'payment', 'amount', 'total', 'due', 'date'],
     receipt: ['receipt', 'paid', 'payment', 'amount', 'total', 'date'],
     report: ['report', 'summary', 'analysis', 'findings', 'conclusion'],
@@ -38,8 +39,54 @@ function detectDocumentType(text) {
   };
 }
 
+// Function to parse exam schedule data
+function parseExamSchedule(text) {
+  const lines = text.split('\n').filter(line => line.trim());
+  const exams = [];
+  
+  // Skip header lines
+  for (let i = 2; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line && !line.includes('Final Exams Schedule')) {
+      const parts = line.split(/\s+/);
+      if (parts.length >= 4) {
+        const code = parts[0];
+        const title = parts.slice(1, -2).join(' ').replace(/^[A-Z0-9]+\s*-\s*/, '');
+        const date = parts[parts.length - 2];
+        const time = parts[parts.length - 1];
+        
+        exams.push({
+          code,
+          title,
+          date,
+          time
+        });
+      }
+    }
+  }
+  
+  return exams;
+}
+
 // Function to generate SQL structure based on text content
 function generateSQLStructure(text, docType) {
+  if (docType === 'exam_schedule') {
+    return {
+      tableName: 'exam_schedules',
+      columns: [
+        { name: 'exam_id', type: 'VARCHAR(50)', constraints: ['PRIMARY KEY'] },
+        { name: 'course_code', type: 'VARCHAR(20)', constraints: ['NOT NULL'] },
+        { name: 'course_title', type: 'VARCHAR(200)', constraints: ['NOT NULL'] },
+        { name: 'exam_date', type: 'DATE', constraints: ['NOT NULL'] },
+        { name: 'exam_time', type: 'VARCHAR(20)', constraints: ['NOT NULL'] },
+        { name: 'semester', type: 'VARCHAR(50)', constraints: ['NOT NULL'] },
+        { name: 'academic_year', type: 'VARCHAR(20)', constraints: ['NOT NULL'] }
+      ],
+      sampleInsert: `INSERT INTO exam_schedules (exam_id, course_code, course_title, exam_date, exam_time, semester, academic_year)
+VALUES ('EXAM001', 'CS101', 'Introduction to Programming', '2025-05-06', '13.30-15.30', 'Spring', '2025');`
+    };
+  }
+
   // Common patterns for different document types
   const patterns = {
     invoice: {
@@ -148,13 +195,17 @@ app.post('/api/convert', upload.single('pdf'), async (req, res) => {
     const { type, confidence } = detectDocumentType(data.text);
     const sqlStructure = generateSQLStructure(data.text, type);
 
+    // Parse exam schedule if applicable
+    const examData = type === 'exam_schedule' ? parseExamSchedule(data.text) : null;
+
     // Combine the results
     const response = {
       ...jsonData,
       analysis: {
         documentType: type,
         confidence,
-        sqlStructure
+        sqlStructure,
+        examData
       }
     };
 
